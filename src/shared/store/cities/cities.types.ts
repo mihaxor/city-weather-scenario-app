@@ -1,4 +1,40 @@
-interface ResponseCity<T> { message: string; data?: T }
+interface ResponseCity<T> {
+    message: string;
+    data?: T
+}
+
+interface DailyWeather {
+    clouds: number;
+    dew_point: number;
+    dt: number;
+    feels_like: {
+        day: number;
+        night: number;
+        eve: number;
+        morn: number;
+    };
+    humidity: number;
+    moon_phase: number;
+    moonrise: number;
+    moonset: number;
+    pop: number;
+    pressure: number;
+    sunrise: number;
+    sunset: number;
+    temp: {
+        day: number;
+        eve: number;
+        max: number;
+        min: number;
+        morn: number;
+        night: number;
+    };
+    uvi: number;
+    weather: Weather[];
+    wind_deg: number;
+    wind_gust: number;
+    wind_speed: number;
+}
 
 interface Weather {
     id: number,
@@ -30,7 +66,7 @@ interface CityForecast {
     },
     minutely: object,
     hourly: object,
-    daily: object
+    daily: DailyWeather[]
 }
 
 interface Population {
@@ -53,5 +89,6 @@ export type {
     CityForecast,
     Population,
     Weather,
-    ResponseCity
+    ResponseCity,
+    DailyWeather
 }

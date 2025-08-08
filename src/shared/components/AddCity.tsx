@@ -74,7 +74,7 @@ const AddCity: React.FC = () => {
                         country: '',
                         touristRating: 1,
                         estimated: 2400000,
-                        dateEstablished: ''
+                        dateEstablished: '2025-01-01'
                     }}
                 >
                     {({handleSubmit, handleChange, setFieldValue, values, touched, errors}) => (

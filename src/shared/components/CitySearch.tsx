@@ -26,7 +26,7 @@ const CitySearch: React.FC = () => {
                                 <Search />
                             </InputGroup.Text>
                             <Form.Control
-                                placeholder='Search...'
+                                placeholder='Search...  e.g. London'
                                 aria-label='Search'
                                 onChange={e => setCityName(e.target.value)}
                             />
