@@ -1,4 +1,4 @@
-import express, {NextFunction, Request, Response} from 'express';
+import express, {NextFunction, Request, Response, Router} from 'express';
 import createError from 'http-errors';
 import path from 'path';
 // import cors from 'cors';
@@ -9,6 +9,7 @@ import Database from 'better-sqlite3';
 import {City, CityForecast, CityWeather, Geocodes, Population, ResponseType, Units} from './data.types';
 
 const app = express();
+const router = Router();
 dotenv.config();
 // app.use(helmet());
 
@@ -93,13 +94,15 @@ const getWeatherAndGeocodesByCity = async (cityName: string): Promise<CityWeathe
 //     return res.json(rows as City[]);
 // });
 
-app.get('/cities', async (req: Request<object, object, object, { cityName?: string }>, res: ResponseType<City[]>) => {
+router.get('/cities', async (req: Request<object, object, object, {
+    cityName?: string
+}>, res: ResponseType<City[]>) => {
     const {cityName} = req.query;
 
     if (cityName) {
         const rows = db.prepare(QUERY.getCityByName).all(cityName) as City[] | undefined;
 
-        if (!rows || rows.length === 0) return res.status(404).json({error: 'City not found.'});
+        if (!rows || rows.length === 0) return res.status(200).json({message: 'City not found.', data: []});
 
         const data = await Promise.all(
             rows.map(async (row) => {
@@ -129,39 +132,42 @@ app.get('/cities', async (req: Request<object, object, object, { cityName?: stri
         return res.json({message: 'Successfully getting the weather and forecast.', data});
     }
 
+    if (cityName?.length === 0) {
+        return res.status(200).json({message: 'City name cannot be empty.'});
+    }
+
     const st = db.prepare(QUERY.getCities);
     const rows = st.all();
 
     return res.json(rows as City[]);
-})
+});
 
-
-app.post('/cities', (req: Request<object, object, City>, res: ResponseType<City>) => {
+router.post('/cities', (req: Request<object, object, City>, res: ResponseType<City>) => {
     const {name, state, country, touristRating, population} = req.body;
 
     if (!name || !state || !country || !touristRating || !population)
-        return res.status(400).json({error: 'Name, state, country, touristRating, population is required.'});
+        return res.status(200).json({message: 'Name, state, country, touristRating, population is required.'});
 
     const st = db.prepare(QUERY.getCities);
     const rows = st.all() as City[];
 
-    if (rows.length + 1 > MAX_CITIES) return res.status(400).json({error: 'You can only add up to 10 cities.'});
+    if (rows.length + 1 > MAX_CITIES) return res.status(200).json({message: 'You can only add up to 10 cities.'});
 
     const insertSt = db.prepare(QUERY.insertCity);
     const result = insertSt.run(name, state, country, touristRating, JSON.stringify(population));
 
-    if (result.changes === 0) return res.status(500).json({error: 'Failed to insert city.'});
+    if (result.changes === 0) return res.status(500).json({message: 'Failed to insert city.'});
 
     return res.status(201).send();
 });
 
-app.put('/cities/:id', (req: Request<{ id: string }, object, Partial<City>>, res: ResponseType<City>) => {
+router.put('/cities/:id', (req: Request<{ id: string }, object, Partial<City>>, res: ResponseType<City>) => {
     const {id} = req.params;
     const {name, state, country, touristRating, population} = req.body;
 
     const city = db.prepare(QUERY.getCityById).get(id) as City | undefined;
 
-    if (!city) return res.status(404).json({error: 'City not found.'});
+    if (!city) return res.status(404).json({message: 'City not found.'});
 
     db.prepare(QUERY.updateCity).run(
         name ?? city?.name,
@@ -176,34 +182,34 @@ app.put('/cities/:id', (req: Request<{ id: string }, object, Partial<City>>, res
     return res.json(updated);
 });
 
-app.delete('/cities/:id', (req: Request<{ id: string }>, res: ResponseType<City>) => {
+router.delete('/cities/:id', (req: Request<{ id: string }>, res: ResponseType<City>) => {
     const {id} = req.params;
 
     const city = db.prepare(QUERY.getCityById).get(id) as City | undefined;
 
-    if (!city) return res.status(404).json({error: 'City not found.'});
+    if (!city) return res.status(404).json({message: 'City not found.'});
 
     db.prepare(QUERY.deleteCityById).run(id);
 
     return res.json({message: 'Deleted successfully.', data: city});
 });
 
-app.delete('/cities', (_req: Request, res: Response<{ message: string }>) => {
+router.delete('/cities', (_req: Request, res: Response<{ message: string }>) => {
     const st = db.prepare(QUERY.deleteAllCities).run();
     const message = st.changes > 0 ? 'All cities deleted successfully.' : 'No cities to delete.';
 
     return res.json({message});
 });
 
-app.get('/.well-known/live', (_req: Request, res: Response) => {
+router.get('/.well-known/live', (_req: Request, res: Response) => {
     res.status(204).send();
 });
 
-app.get('/.well-known/ready', (_req, res) => {
+router.get('/.well-known/ready', (_req, res) => {
     res.status(204).send();
 });
 
-app.get('/.well-known/health', (_req: Request, res: Response) => {
+router.get('/.well-known/health', (_req: Request, res: Response) => {
     const healthData = {
         status: 'healthy',
         timestamp: new Date().toISOString(),
@@ -220,6 +226,7 @@ app.get('/.well-known/health', (_req: Request, res: Response) => {
     res.status(200).json(healthData);
 });
 
+app.use('/api', router);
 app.use(express.static(path.join(__dirname, '../../build')));
 
 app.get('{*splat}', (_req, res) => {

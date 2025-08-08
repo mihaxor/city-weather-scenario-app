@@ -1,3 +1,5 @@
+interface ResponseCity<T> { message: string; data?: T }
+
 interface Weather {
     id: number,
     main: string,
@@ -50,5 +52,6 @@ export type {
     City,
     CityForecast,
     Population,
-    Weather
+    Weather,
+    ResponseCity
 }
