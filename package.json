@@ -15,7 +15,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@popperjs/core": "^2.11.8",
+    "@reduxjs/toolkit": "^2.8.2",
     "better-sqlite3": "^12.2.0",
+    "bootstrap": "^5.3.7",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "debug": "^4.4.1",
@@ -25,7 +28,11 @@
     "http-errors": "^2.0.0",
     "morgan": "^1.10.1",
     "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react-bootstrap": "^2.10.10",
+    "react-bootstrap-icons": "^1.11.6",
+    "react-dom": "^19.1.1",
+    "react-redux": "^9.2.0",
+    "react-router": "^7.7.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",

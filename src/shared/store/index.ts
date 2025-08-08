@@ -1,0 +1,1 @@
+export { default as citiesReducer } from '@/shared/store/cities/citiesSlice';
