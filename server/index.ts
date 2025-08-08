@@ -6,13 +6,10 @@ import path from 'path';
 import logger from 'morgan';
 import dotenv from 'dotenv';
 import Database from 'better-sqlite3';
+import {City, CityForecast, CityWeather, Geocodes, ResponseType, Units} from './data.types';
 
 const app = express();
 dotenv.config();
-
-const APP_PORT = process.env.PORT || process.env.EXPRESS_SERVER_PORT;
-const MAX_CITIES = 10;
-
 // app.use(helmet());
 
 // app.use(cors({
@@ -23,15 +20,16 @@ const MAX_CITIES = 10;
 app.use(express.json());
 app.use(logger('short'));
 
-interface City {
-    id?: number;
-    name: string;
-    country: string;
-}
+const APP_PORT = process.env.PORT || process.env.EXPRESS_SERVER_PORT;
+const WEATHER_API = process.env.EXPRESS_SERVER_WEATHER_API || '';
+const WEATHER_API_KEY = process.env.EXPRESS_SERVER_WEATHER_API_KEY || '';
+const MAX_CITIES = 10;
+const UNITS = 'metric' as Units;
 
 const QUERY = {
     getCities: 'SELECT * FROM cities',
     getCityById: 'SELECT * FROM cities WHERE id = ?',
+    getCityByName: 'SELECT * FROM cities WHERE name = ?',
     insertCity: 'INSERT INTO cities (name, country) VALUES (?, ?)',
     updateCity: 'UPDATE cities SET name = ?, country = ? WHERE id = ?',
     deleteCityById: 'DELETE FROM cities WHERE id = ?',
@@ -59,14 +57,82 @@ const initDatabase = () => {
 
 const db = initDatabase();
 
-app.get('/cities', (_req: Request, res: Response<City[]>) => {
+
+const getWeatherAndForecastsByGeocodes = async (coord: Geocodes): Promise<CityForecast> => {
+    const prepareUrl = `${WEATHER_API}/onecall?lat=${coord.lat}&lon=${coord.lon}&units=${UNITS}`;
+
+    console.log(`Fetching forecast data from: ${prepareUrl}`);
+
+    const response = await fetch(`${prepareUrl}&appid=${WEATHER_API_KEY}`);
+    const data = await response.json() as CityForecast;
+
+    if (response.status != 200 || !data) throw new Error(`No weather data found for coordinates: ${coord.lat}, ${coord.lon}`);
+
+    return data;
+}
+
+const getWeatherAndGeocodesByCity = async (cityName: string): Promise<CityWeather> => {
+    const prepareUrl = `${WEATHER_API}/find?q=${cityName}&units=${UNITS}`;
+
+    console.log(`Fetching forecast data for city: ${cityName} from: ${prepareUrl}`);
+
+    const response = await fetch(`${prepareUrl}&appid=${WEATHER_API_KEY}`);
+    const data = await response.json() as CityWeather;
+
+    if (response.status != 200 || !data) throw new Error(`No weather data found for city: ${cityName}`);
+
+    return data;
+}
+
+// app.get('/cities', (_req: Request, res: Response<City[]>) => {
+//     const st = db.prepare(QUERY.getCities);
+//     const rows = st.all();
+//
+//     return res.json(rows as City[]);
+// });
+
+app.get('/cities', async (req: Request<object, object, object, { cityName?: string }>, res: ResponseType<City[]>) => {
+    const {cityName} = req.query;
+
+    if (cityName) {
+        const rows = db.prepare(QUERY.getCityByName).all(cityName) as City[] | undefined;
+
+        if (!rows || rows.length === 0) return res.status(404).json({error: 'City not found.'});
+
+        const data = await Promise.all(
+            rows.map(async (row) => {
+                const cityWeather = await getWeatherAndGeocodesByCity(row.name);
+                console.log(`Weather data for city ${row.name}:`, cityWeather);
+
+                if (cityWeather && cityWeather.count === 1) {
+                    const forecast = await getWeatherAndForecastsByGeocodes(cityWeather.list[0].coord);
+                    console.log(`Weather and forecast data for city ${row.name}:`, {
+                        lat: forecast.lat,
+                        lon: forecast.lon,
+                        timezone: forecast.timezone,
+                    });
+
+                    return {
+                        ...row,
+                        weather: forecast,
+                    };
+                }
+
+                return row;
+            })
+        );
+
+        return res.json({message: 'Successfully.', data});
+    }
+
     const st = db.prepare(QUERY.getCities);
     const rows = st.all();
 
     return res.json(rows as City[]);
-});
+})
 
-app.post('/cities', (req: Request<object, object, City>, res: Response<City | { error: string }>) => {
+
+app.post('/cities', (req: Request<object, object, City>, res: ResponseType<City>) => {
     const {name, country} = req.body;
 
     if (!name || !country) return res.status(400).json({error: 'Name and country required.'});
@@ -84,9 +150,7 @@ app.post('/cities', (req: Request<object, object, City>, res: Response<City | { 
     return res.status(201).send();
 });
 
-app.put('/cities/:id', (req: Request<{ id: string }, object, Partial<City>>, res: Response<City | {
-    error: string
-}>) => {
+app.put('/cities/:id', (req: Request<{ id: string }, object, Partial<City>>, res: ResponseType<City>) => {
     const {id} = req.params;
     const {name, country} = req.body;
 
@@ -101,9 +165,7 @@ app.put('/cities/:id', (req: Request<{ id: string }, object, Partial<City>>, res
     return res.json(updated);
 });
 
-app.delete('/cities/:id', (req: Request<{ id: string }>, res: Response<{ message: string; city?: City } | {
-    error: string
-}>) => {
+app.delete('/cities/:id', (req: Request<{ id: string }>, res: ResponseType<City>) => {
     const {id} = req.params;
 
     const city = db.prepare(QUERY.getCityById).get(id) as City | undefined;
@@ -112,7 +174,7 @@ app.delete('/cities/:id', (req: Request<{ id: string }>, res: Response<{ message
 
     db.prepare(QUERY.deleteCityById).run(id);
 
-    return res.json({message: 'Deleted successfully.', city});
+    return res.json({message: 'Deleted successfully.', data: city});
 });
 
 app.delete('/cities', (_req: Request, res: Response<{ message: string }>) => {
