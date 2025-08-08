@@ -6,7 +6,7 @@ import path from 'path';
 import logger from 'morgan';
 import dotenv from 'dotenv';
 import Database from 'better-sqlite3';
-import {City, CityForecast, CityWeather, Geocodes, ResponseType, Units} from './data.types';
+import {City, CityForecast, CityWeather, Geocodes, Population, ResponseType, Units} from './data.types';
 
 const app = express();
 dotenv.config();
@@ -30,8 +30,8 @@ const QUERY = {
     getCities: 'SELECT * FROM cities',
     getCityById: 'SELECT * FROM cities WHERE id = ?',
     getCityByName: 'SELECT * FROM cities WHERE name = ?',
-    insertCity: 'INSERT INTO cities (name, country) VALUES (?, ?)',
-    updateCity: 'UPDATE cities SET name = ?, country = ? WHERE id = ?',
+    insertCity: 'INSERT INTO cities (name, state, country, touristRating, population) VALUES (?, ?, ?, ?, ?)',
+    updateCity: 'UPDATE cities SET name = ?, state = ?, country = ?, touristRating = ?, population = ? WHERE id = ?',
     deleteCityById: 'DELETE FROM cities WHERE id = ?',
     deleteAllCities: 'DELETE FROM cities',
     countCities: 'SELECT COUNT(*) as count FROM cities',
@@ -44,9 +44,12 @@ const initDatabase = () => {
         db.prepare(`
             CREATE TABLE IF NOT EXISTS cities
             (
-                id      INTEGER PRIMARY KEY AUTOINCREMENT,
-                name    TEXT NOT NULL,
-                country TEXT NOT NULL
+                id            INTEGER PRIMARY KEY AUTOINCREMENT,
+                name          TEXT    NOT NULL,
+                state         TEXT    NOT NULL,
+                country       TEXT    NOT NULL,
+                touristRating INTEGER NOT NULL CHECK (touristRating BETWEEN 1 AND 5),
+                population    TEXT    NOT NULL
             )`
         ).run();
     } catch (err) {
@@ -56,7 +59,6 @@ const initDatabase = () => {
 }
 
 const db = initDatabase();
-
 
 const getWeatherAndForecastsByGeocodes = async (coord: Geocodes): Promise<CityForecast> => {
     const prepareUrl = `${WEATHER_API}/onecall?lat=${coord.lat}&lon=${coord.lon}&units=${UNITS}`;
@@ -102,6 +104,7 @@ app.get('/cities', async (req: Request<object, object, object, { cityName?: stri
         const data = await Promise.all(
             rows.map(async (row) => {
                 const cityWeather = await getWeatherAndGeocodesByCity(row.name);
+                const population = JSON.parse(row.population as unknown as string) as Population;
                 console.log(`Weather data for city ${row.name}:`, cityWeather);
 
                 if (cityWeather && cityWeather.count === 1) {
@@ -114,6 +117,7 @@ app.get('/cities', async (req: Request<object, object, object, { cityName?: stri
 
                     return {
                         ...row,
+                        population,
                         weather: forecast,
                     };
                 }
@@ -122,7 +126,7 @@ app.get('/cities', async (req: Request<object, object, object, { cityName?: stri
             })
         );
 
-        return res.json({message: 'Successfully.', data});
+        return res.json({message: 'Successfully getting the weather and forecast.', data});
     }
 
     const st = db.prepare(QUERY.getCities);
@@ -133,9 +137,10 @@ app.get('/cities', async (req: Request<object, object, object, { cityName?: stri
 
 
 app.post('/cities', (req: Request<object, object, City>, res: ResponseType<City>) => {
-    const {name, country} = req.body;
+    const {name, state, country, touristRating, population} = req.body;
 
-    if (!name || !country) return res.status(400).json({error: 'Name and country required.'});
+    if (!name || !state || !country || !touristRating || !population)
+        return res.status(400).json({error: 'Name, state, country, touristRating, population is required.'});
 
     const st = db.prepare(QUERY.getCities);
     const rows = st.all() as City[];
@@ -143,7 +148,7 @@ app.post('/cities', (req: Request<object, object, City>, res: ResponseType<City>
     if (rows.length + 1 > MAX_CITIES) return res.status(400).json({error: 'You can only add up to 10 cities.'});
 
     const insertSt = db.prepare(QUERY.insertCity);
-    const result = insertSt.run(name, country);
+    const result = insertSt.run(name, state, country, touristRating, JSON.stringify(population));
 
     if (result.changes === 0) return res.status(500).json({error: 'Failed to insert city.'});
 
@@ -152,13 +157,19 @@ app.post('/cities', (req: Request<object, object, City>, res: ResponseType<City>
 
 app.put('/cities/:id', (req: Request<{ id: string }, object, Partial<City>>, res: ResponseType<City>) => {
     const {id} = req.params;
-    const {name, country} = req.body;
+    const {name, state, country, touristRating, population} = req.body;
 
     const city = db.prepare(QUERY.getCityById).get(id) as City | undefined;
 
     if (!city) return res.status(404).json({error: 'City not found.'});
 
-    db.prepare(QUERY.updateCity).run(name ?? city?.name, country ?? city?.country, id);
+    db.prepare(QUERY.updateCity).run(
+        name ?? city?.name,
+        state ?? city?.state,
+        country ?? city?.country,
+        touristRating ?? city?.touristRating,
+        population ? JSON.stringify(population) : city?.population,
+        id);
 
     const updated = db.prepare(QUERY.getCityById).get(id) as City;
 

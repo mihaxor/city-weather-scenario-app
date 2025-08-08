@@ -1,12 +1,5 @@
 import {Response} from 'express';
 
-interface City {
-    id?: number;
-    name: string;
-    country: string;
-    weather?: CityForecast;
-}
-
 type ResponseType<T> = Response<T | { message: string; data?: T } | { error: string }>
 type Units = 'metric' | 'imperial' | 'standard';
 
@@ -89,6 +82,20 @@ interface CityForecast {
     daily: object
 }
 
+interface Population {
+    dateEstablished: string;
+    estimated: number;
+}
+
+interface City {
+    id?: number;
+    name: string;
+    state: string,
+    country: string;
+    touristRating: number;
+    population: Population;
+    weather?: CityForecast;
+}
 
 export type {
     ResponseType,
@@ -98,6 +105,7 @@ export type {
     Weather,
     WeatherMainBlock,
     WeatherBlock,
+    Population,
     City,
     CityWeather,
     CityForecast
