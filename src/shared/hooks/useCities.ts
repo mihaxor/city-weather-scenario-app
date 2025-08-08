@@ -1,7 +1,13 @@
-import {useAddCityMutation, useDeleteCityMutation, useGetCitiesByNameQuery} from '@/shared/store/cities/citiesInfoApi';
+import {
+    useAddCityMutation,
+    useDeleteCityMutation,
+    useGetCitiesByNameQuery,
+    useGetCityByIdQuery,
+    useUpdateCityMutation
+} from '@/shared/store/cities/citiesInfoApi';
 import {City} from '@/shared/store/cities/cities.types';
 
-export const useCities = (cityName: string) => {
+export const useCities = (cityName: string, cityId?: string | undefined) => {
     const {
         data: cities,
         isLoading,
@@ -9,8 +15,13 @@ export const useCities = (cityName: string) => {
         isError,
     } = useGetCitiesByNameQuery(cityName);
 
+    const {data: cityById} = useGetCityByIdQuery(cityId, {
+        skip: !cityId,
+    });
+
     const [addCity, {isLoading: isAddingCity, isError: isAddError, error: addError}] = useAddCityMutation();
     const [deleteCity] = useDeleteCityMutation();
+    const [updateCity] = useUpdateCityMutation();
 
     const hasError = isError || (cities && 'error' in cities);
     const errorMessage = cities && 'error' in cities ? cities.error : undefined;
@@ -29,7 +40,6 @@ export const useCities = (cityName: string) => {
             const result = await addCity(cityPayload).unwrap();
 
             return {success: true, data: result};
-
         } catch (error: any) {
             console.error('Error adding the city:', error);
 
@@ -39,10 +49,12 @@ export const useCities = (cityName: string) => {
 
     return {
         cities: citiesData,
+        cityById,
         isLoading: isLoading || isFetching,
         isError: hasError,
         errorMessage,
         addCity: handleAddCity,
+        updateCity,
         deleteCity,
         isAddingCity,
         isAddError,

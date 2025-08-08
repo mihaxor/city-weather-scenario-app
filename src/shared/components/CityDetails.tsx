@@ -1,8 +1,9 @@
 import React from 'react';
-import {Accordion, Col, Row, Spinner, Button} from 'react-bootstrap';
+import {Accordion, Button, Col, Row, Spinner} from 'react-bootstrap';
 import {City} from '@/shared/store/cities/cities.types';
 import CityForecast from '@/shared/components/CityForecast';
 import {toast} from 'react-toastify';
+import {useNavigate} from 'react-router';
 
 interface CityDetailsProps {
     isLoading: boolean;
@@ -12,6 +13,7 @@ interface CityDetailsProps {
 }
 
 const CityDetails: React.FC<CityDetailsProps> = ({isLoading, isError, cities, deleteCity}) => {
+    const navigate = useNavigate();
 
     if (isLoading) return (
         <Row className='justify-content-center mt-5 pt-5'>
@@ -48,10 +50,15 @@ const CityDetails: React.FC<CityDetailsProps> = ({isLoading, isError, cities, de
                                             className='text-primary'>{Math.round(city.weather?.current?.temp as number)}°C</span>
                                     </div>
                                     <div className='d-flex gap-3'>
+                                        <Button variant='outline-warning' size='sm' onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (city.id) navigate(`/city/${city.id}`);
+                                        }}>EDIT
+                                        </Button>
                                         <Button variant='outline-danger' size='sm' onClick={(e) => {
                                             e.stopPropagation();
                                             if (city.id) handleDelete(city.id);
-                                        }}>Delete
+                                        }}>DELETE
                                         </Button>
                                     </div>
                                 </div>

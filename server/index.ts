@@ -144,6 +144,28 @@ router.get('/cities', async (req: Request<object, object, object, {
     return res.json(rows as City[]);
 });
 
+router.get('/cities/:id', (req: Request<{ id: string }>, res: ResponseType<City>) => {
+    const {id} = req.params;
+
+    if (id && !isNaN(Number(id))) {
+        const city = db.prepare(QUERY.getCityById).get(id) as City | undefined;
+
+        if (!city) return res.status(404).json({message: 'City not found.'});
+
+        const population = JSON.parse(city.population as unknown as string) as Population;
+        console.log(`City found: ${city.name}, Population:`, population);
+
+        return res.json({
+            message: 'City found successfully.',
+            data: {
+                ...city,
+                population
+            }
+        });
+    }
+    return res.status(400).json({message: 'Invalid city ID.'});
+});
+
 router.post('/cities', (req: Request<object, object, City>, res: ResponseType<City>) => {
     const {name, state, country, touristRating, population} = req.body;
 

@@ -15,6 +15,7 @@ createRoot(document.getElementById('root')!).render(
                 <Route path='/' Component={App}>
                     <Route path='/' Component={CitySearch} />
                     <Route path='/city' Component={CityAdd} />
+                    <Route path='/city/:cityId' Component={CityAdd} />
                 </Route>
 
                 <Route path='*' element={<Navigate to='/' />} />

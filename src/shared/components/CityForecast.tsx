@@ -9,12 +9,12 @@ interface CityForecast {
 const CityForecast: React.FC<CityForecast> = ({daily}) => {
 
     const dayRow = ({daily}: CityForecast) =>
-        daily?.map((day) => {
+        daily?.map((day, key) => {
             const date = new Date(day.dt * 1000);
             const dayString = date.toLocaleDateString('en-US', {weekday: 'long'});
 
             return (
-                <tr>
+                <tr key={key}>
                     <td>{dayString}</td>
                     <td>{Math.round(day.temp.max)} / {Math.round(day.temp.min)} °C</td>
                     <td>{day.weather[0].description}</td>
