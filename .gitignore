@@ -22,3 +22,5 @@ npm-debug.log*
 *.iml
 /tmp
 .npmrc
+
+cities.db
