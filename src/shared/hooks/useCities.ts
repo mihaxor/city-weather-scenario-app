@@ -1,4 +1,4 @@
-import {useAddCityMutation, useGetCitiesByNameQuery} from '@/shared/store/cities/citiesInfoApi';
+import {useAddCityMutation, useDeleteCityMutation, useGetCitiesByNameQuery} from '@/shared/store/cities/citiesInfoApi';
 import {City} from '@/shared/store/cities/cities.types';
 
 export const useCities = (cityName: string) => {
@@ -10,6 +10,7 @@ export const useCities = (cityName: string) => {
     } = useGetCitiesByNameQuery(cityName);
 
     const [addCity, {isLoading: isAddingCity, isError: isAddError, error: addError}] = useAddCityMutation();
+    const [deleteCity] = useDeleteCityMutation();
 
     const hasError = isError || (cities && 'error' in cities);
     const errorMessage = cities && 'error' in cities ? cities.error : undefined;
@@ -42,6 +43,7 @@ export const useCities = (cityName: string) => {
         isError: hasError,
         errorMessage,
         addCity: handleAddCity,
+        deleteCity,
         isAddingCity,
         isAddError,
         addError

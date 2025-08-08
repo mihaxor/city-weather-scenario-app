@@ -5,7 +5,7 @@ import Store from '@/app/ReduxConfig';
 import App from '@/App';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '@/styles.css';
-import AddCity from '@/shared/components/AddCity';
+import CityAdd from '@/shared/components/CityAdd';
 import CitySearch from '@/shared/components/CitySearch';
 
 createRoot(document.getElementById('root')!).render(
@@ -14,7 +14,7 @@ createRoot(document.getElementById('root')!).render(
             <Routes>
                 <Route path='/' Component={App}>
                     <Route path='/' Component={CitySearch} />
-                    <Route path='/city' Component={AddCity} />
+                    <Route path='/city' Component={CityAdd} />
                 </Route>
 
                 <Route path='*' element={<Navigate to='/' />} />

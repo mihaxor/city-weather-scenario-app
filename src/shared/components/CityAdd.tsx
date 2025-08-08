@@ -5,13 +5,14 @@ import {Button, Col, Form, InputGroup, Row, Spinner} from 'react-bootstrap';
 import {useNavigate} from 'react-router';
 import {Star, StarFill} from 'react-bootstrap-icons';
 import {useCities} from '@/shared/hooks/useCities';
+import {toast} from 'react-toastify';
 
 interface StartRatingProps {
     rating: number;
     onRatingChange: (rating: number) => void;
 }
 
-const AddCity: React.FC = () => {
+const CityAdd: React.FC = () => {
     const {Formik} = formik;
     const schema = object().shape({
         name: string().required(),
@@ -25,6 +26,7 @@ const AddCity: React.FC = () => {
     const navigate = useNavigate();
     const {addCity, isAddingCity, isAddError} = useCities('');
     const [submitError, setSubmitError] = useState<string | null>(null);
+    const [submitMessage, setSubmitMessage] = useState<string | null>(null);
 
     const StarRating: React.FC<StartRatingProps> = ({rating, onRatingChange}) =>
         (
@@ -42,6 +44,21 @@ const AddCity: React.FC = () => {
             </div>
         );
 
+    const messageComp = (submitMessage: string | null, submitError: string | null, isAddError: boolean) => {
+        if (submitMessage) {
+            return (
+                <div className='alert alert-success mt-3' role='alert'>
+                    {submitMessage}
+                </div>
+            );
+        }
+        return (isAddError || submitError) && (
+            <div className='alert alert-danger mt-3' role='alert'>
+                {submitError || 'An error occurred while saving the city. Please try again.'}
+            </div>
+        )
+    }
+
     return (
         <Row className='justify-content-center mt-4'>
             <Col xs={12} md={8} lg={6}>
@@ -57,10 +74,14 @@ const AddCity: React.FC = () => {
 
                             if (result.success) {
                                 console.log('City has been added', result.success, values);
+                                setSubmitMessage('City has been added successfully!');
+                                toast.success('City has been added successfully!', {theme: 'dark'});
 
                                 resetForm();
                             } else {
                                 setSubmitError(result.error || 'An error occurred while adding the city.');
+                                toast.error(result.error, {theme: 'dark'});
+                                resetForm();
                             }
                         } catch (error) {
                             console.error('Error adding the city:', error);
@@ -153,11 +174,7 @@ const AddCity: React.FC = () => {
                                     )}
                                 </Form.Group>
                             </Row>
-                            {(isAddError || submitError) && (
-                                <div className='alert alert-danger mt-3' role='alert'>
-                                    {submitError || 'An error occurred while saving the city. Please try again.'}
-                                </div>
-                            )}
+                            {messageComp(submitMessage, submitError, isAddError)}
                             <Col className='d-flex justify-content-center gap-3 mt-5'>
                                 <Button type='button' variant='outline-primary'
                                         onClick={() => navigate('/')}>Back</Button>
@@ -187,4 +204,4 @@ const AddCity: React.FC = () => {
 
 }
 
-export default AddCity;
+export default CityAdd;

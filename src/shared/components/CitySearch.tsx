@@ -10,7 +10,7 @@ const CitySearch: React.FC = () => {
     const navigate = useNavigate();
     const [cityName, setCityName] = useState('');
     const debounceValue = useDebounce(cityName, 500);
-    const {cities, isLoading, isError} = useCities(debounceValue);
+    const {cities, isLoading, isError, deleteCity} = useCities(debounceValue);
 
     return (
         <>
@@ -34,7 +34,7 @@ const CitySearch: React.FC = () => {
                     </div>
                 </Col>
             </Row>
-            <CityDetails cities={cities} isLoading={isLoading} isError={isError} />
+            <CityDetails cities={cities} isLoading={isLoading} isError={isError} deleteCity={deleteCity} />
         </>
     )
 }
