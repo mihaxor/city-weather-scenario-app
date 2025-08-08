@@ -11,7 +11,7 @@ const App = () => {
             <Theme />
             <Outlet context={theme} />
         </Container>
-    )
+    );
 };
 
 export default App;

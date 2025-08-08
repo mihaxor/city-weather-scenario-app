@@ -29,9 +29,19 @@ const CityDetails: React.FC<CityDetailsProps> = ({isLoading, isError, cities}) =
                         <Accordion.Item key={key} eventKey={String(city.id)}>
                             <Accordion.Header>{city.name} - {city.state} - {Math.round(city.weather?.current?.temp as number)}°C</Accordion.Header>
                             <Accordion.Body>
-                                <p><strong>Country:</strong> {city.country}</p>
-                                <p><strong>State:</strong> {city.state}</p>
-                                <p><strong>Description:</strong> {city.touristRating}</p>
+                                <div className='city-details'>
+                                    <p><strong>ID:</strong> {city.id || 'N/A'}</p>
+                                    <p><strong>CityName:</strong> {city.name}</p>
+                                    <p><strong>State:</strong> {city.state}</p>
+                                    <p><strong>Country:</strong> {city.country}</p>
+                                    <p><strong>Rating:</strong> {city.touristRating}/5</p>
+
+                                    <h5 className='mt-4'>Population</h5>
+                                    <p><strong>Date established:</strong> {city.population.dateEstablished}</p>
+                                    <p><strong>Estimated
+                                        population:</strong> {city.population.estimated.toLocaleString()}
+                                    </p>
+                                </div>
                             </Accordion.Body>
                         </Accordion.Item>
                     ))}

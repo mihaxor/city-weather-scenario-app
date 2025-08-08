@@ -110,8 +110,10 @@ router.get('/cities', async (req: Request<object, object, object, {
                 const population = JSON.parse(row.population as unknown as string) as Population;
                 console.log(`Weather data for city ${row.name}:`, cityWeather);
 
-                if (cityWeather && cityWeather.count === 1) {
-                    const forecast = await getWeatherAndForecastsByGeocodes(cityWeather.list[0].coord);
+                const matchedCountry = cityWeather.list.find((item) => item.sys.country === row.state.toUpperCase());
+
+                if (cityWeather && matchedCountry) {
+                    const forecast = await getWeatherAndForecastsByGeocodes(matchedCountry.coord);
                     console.log(`Weather and forecast data for city ${row.name}:`, {
                         lat: forecast.lat,
                         lon: forecast.lon,
@@ -151,7 +153,7 @@ router.post('/cities', (req: Request<object, object, City>, res: ResponseType<Ci
     const st = db.prepare(QUERY.getCities);
     const rows = st.all() as City[];
 
-    if (rows.length + 1 > MAX_CITIES) return res.status(200).json({message: 'You can only add up to 10 cities.'});
+    if (rows.length + 1 > MAX_CITIES) return res.status(400).json({message: 'You can only add up to 10 cities.'});
 
     const insertSt = db.prepare(QUERY.insertCity);
     const result = insertSt.run(name, state, country, touristRating, JSON.stringify(population));

@@ -1,23 +1,19 @@
 import {BaseApi} from '@/app/BaseApi';
-import {City} from '@/shared/store/cities/cities.types';
+import {City, ResponseCity} from '@/shared/store/cities/cities.types';
 
 export const citiesInfoApi = BaseApi.injectEndpoints({
-    endpoints: (builder) => ({
+    endpoints: builder => ({
         getCities: builder.query<City[], void>({
-            query: () => '/api/cities',
+            query: () => '/cities',
             providesTags: ['Cities']
         }),
-        getCityById: builder.query<City, number>({
-            query: (id) => `/api/cities/${id}`,
-            providesTags: (_result, _error, id) => [{type: 'Cities', id}]
-        }),
-        getCitiesByName: builder.query<City[], string>({
-            query: (name) => `/api/cities?cityName=${name}`,
+        getCitiesByName: builder.query<ResponseCity<City[]>, string>({
+            query: (name) => `/cities?cityName=${name}`,
             providesTags: ['Cities']
         }),
-        addCity: builder.mutation<City, { name: string; country: string }>({
+        addCity: builder.mutation<ResponseCity<City>, { name: string; country: string }>({
             query: (body) => ({
-                url: '/api/cities',
+                url: '/cities',
                 method: 'POST',
                 body,
             }),
@@ -25,7 +21,7 @@ export const citiesInfoApi = BaseApi.injectEndpoints({
         }),
         deleteCity: builder.mutation<{ message: string }, number>({
             query: (id) => ({
-                url: `/api/cities/${id}`,
+                url: `/cities/${id}`,
                 method: 'DELETE',
             }),
             invalidatesTags: ['Cities']
@@ -36,7 +32,6 @@ export const citiesInfoApi = BaseApi.injectEndpoints({
 
 export const {
     useGetCitiesQuery,
-    useGetCityByIdQuery,
     useGetCitiesByNameQuery,
     useAddCityMutation,
     useDeleteCityMutation

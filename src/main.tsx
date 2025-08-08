@@ -1,10 +1,23 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.tsx'
+import {createRoot} from 'react-dom/client';
+import {Provider} from 'react-redux';
+import {BrowserRouter, Navigate, Route, Routes} from 'react-router';
+import Store from '@/app/ReduxConfig';
+import App from '@/App';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import '@/styles.css';
+import AddCity from '@/shared/components/AddCity';
+import CitySearch from '@/shared/components/CitySearch';
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-)
+    <Provider store={Store}>
+        <BrowserRouter>
+            <Routes>
+                <Route path='/' Component={App}>
+                    <Route path='/' Component={CitySearch} />
+                    <Route path='/city' Component={AddCity} />
+                </Route>
+
+                <Route path='*' element={<Navigate to='/' />} />
+            </Routes>
+        </BrowserRouter>
+    </Provider>);
