@@ -1,69 +1,90 @@
-# React + TypeScript + Vite
+# City Weather Scenario App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A React TypeScript application that displays weather information for cities with a scenario-based user experience.
+The application is using SQLite for local data storage and integrates with the OpenWeatherMap API to fetch weather data.
 
-Currently, two official plugins are available:
+## Prerequisites
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Node.js (v22.18.0) - use `nvm use` to switch to the correct version
+- Yarn package manager
 
-## Expanding the ESLint configuration
+## Setup and Installation
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### 1. Set up API Key
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+Create a `.env` file in the root directory with the following environment variables:
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+```env
+# Server Configuration
+EXPRESS_SERVER_WEATHER_API=https://api.openweathermap.org/data/3.0
+EXPRESS_SERVER_WEATHER_API_KEY=your_openweathermap_api_key_here
+EXPRESS_SERVER_PORT=8080
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Client Configuration
+VITE_APP_API_BASE_URL=http://localhost:8080/api
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+**To get an OpenWeatherMap API key:**
+1. Go to [OpenWeatherMap](https://openweathermap.org/)
+2. Sign up for a free account
+3. Navigate to "My API Keys" section
+4. Copy your API key and paste it in the `.env` file
 
-```js
-// eslint.config.mjs
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### 2. Install Dependencies
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+nvm use
+yarn install
 ```
+
+### 3. Build the Application
+
+```bash
+yarn run build
+```
+
+### 4. Start the Server
+
+```bash
+yarn run server
+```
+
+The application will be available at `http://localhost:8080`
+
+## Application Scenario
+
+The client has a simple scenario
+
+REST countries API (https://restcountries.eu/#api-endpoints-all ) returns detailed country information
+
+OpenWeatherMap REST API (https://openweathermap.org ) returns detailed weather information for a particular city
+
+The client needs a new REST API and React front-end which will:
+
+Support CRUD operations for a city
+Combine weather and country data for a particular city when searching
+
+
+API
+Create a Node/Express REST API that supports the following operations
+
+Add City - adds city name, state (i.e. geographic sub-region), country, tourist rating (1-5), date established and estimated population. Adds record to local SQL data store and generates unique city id.
+
+Update city – update rating, date established and estimated population by city id
+
+Delete city – delete city by city id
+
+Search city – search by city name, and returns the city id, name, state (i.e. geographic sub-region), country, tourist rating (1-5), date established, estimated population, 2 digit country code, 3 digit country code, currency code and weather for the city. If there are multiple matches, this information is returned for all matches. If the city is not stored locally no results need be returned. The APIs above should be used to provide any information not stored locally.
+
+The Add, Update and Delete operations will take place against a local SQL data store
+
+Provide at least 1 unit test
+
+UI
+Create a React front-end to enable searching and CRUD operations
+
+
+There’s only 1 explicit non-functional requirement:
+
+
+Structure your code using modern development practices, the type you’d be proud to see in production
