@@ -12,14 +12,14 @@ interface StartRatingProps {
     onRatingChange: (rating: number) => void;
 }
 
-type CityFormValues = {
+interface CityFormValues {
     name: string;
     state: string;
     country: string;
     touristRating: number;
     estimated: number;
     dateEstablished: string;
-};
+}
 
 const CityAdd: React.FC = () => {
     const {Formik} = formik;
